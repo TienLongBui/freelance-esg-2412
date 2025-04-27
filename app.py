@@ -8,33 +8,45 @@ st.set_page_config(page_title="ESG + Sector Performance", layout="wide")
 st.title("🌱 Vietnam Agriculture: ESG & Sector Performance Dashboard")
 
 # --- TABS ---
-tab1, tab2 = st.tabs(["🌿 ESG Overview", "📈 Sector Performance"])
+tab1, tab2, tab3 = st.tabs(["🌿 ESG Overview", "📈 Sector Performance", "Build Your Own ESG"])
 
 # --- ESG TAB (Keep existing visualisation) ---
 with tab1:
     st.markdown("""This interactive sunburst chart helps explore the structure of ESG (Environmental, Social, Governance) components.  
                 You can filter to focus on specific categories and view insights accordingly.""")
 
-    data = pd.DataFrame({
-        'labels': [
-            'ESG', 'Governance', 'Social', 'Environment',
-            'Food Security', 'Government Regulations', 'PPP', 'Private Investment',
-            'High-skilled Labour', 'Community Impact', 'Health & Safety',
-            'Resource & Land Use', 'Carbon Credit', 'Eco-farming', 'High-tech Cultivation'
-        ],
-        'parents': [
-            '', 'ESG', 'ESG', 'ESG',
-            'Governance', 'Governance', 'Governance', 'Governance',
-            'Social', 'Social', 'Social',
-            'Environment', 'Environment', 'Environment', 'Environment'
-        ],
-        'values': [
-            200, 3800, 3800, 3800,
-            28000, 28000, 28000, 28000,
-            37000, 37000, 37000,
-            28000, 28000, 28000, 28000
-        ]
-    })
+ # --- ADD THIS ---
+    uploaded_file = st.file_uploader("📥 Upload your ESG data (CSV or Excel format)", type=['csv','xlsx'])
+    
+    if uploaded_file:
+        if uploaded_file.name.endswith('.csv'):
+            data = pd.read_csv(uploaded_file)
+        elif uploaded_file.name.endswith('.xlsx'):
+            data = pd.read_excel(uploaded_file)
+        else:
+            st.error("Unsupported file type. Please upload a CSV or Excel file.")
+
+    else:
+        data = pd.DataFrame({
+            'labels': [
+                'ESG', 'Governance', 'Social', 'Environment',
+                'Food Security', 'Government Regulations', 'PPP', 'Private Investment',
+                'High-skilled Labour', 'Community Impact', 'Health & Safety',
+                'Resource & Land Use', 'Carbon Credit', 'Eco-farming', 'High-tech Cultivation'
+            ],
+            'parents': [
+                '', 'ESG', 'ESG', 'ESG',
+                'Governance', 'Governance', 'Governance', 'Governance',
+                'Social', 'Social', 'Social',
+                'Environment', 'Environment', 'Environment', 'Environment'
+            ],
+            'values': [
+                200, 3800, 3800, 3800,
+                28000, 28000, 28000, 28000,
+                37000, 37000, 37000,
+                28000, 28000, 28000, 28000
+            ]
+        })
 
     # Color mapping
     color_discrete_map = {
@@ -157,3 +169,68 @@ with tab2:
     col2.metric("👩‍🌾 Employment", "13.8 million")
     col3.metric("💸 FDI in Agriculture", "$61.98M")
 
+with tab3:
+    st.header("🛠️ Build Your Own ESG Sunburst Structure")
+
+    if 'node_list' not in st.session_state:
+        st.session_state.node_list = []
+
+    st.markdown("""
+    📝 **How to build your Sunburst Chart:**
+    - **Node Label**: Name of the item (e.g., "Governance", "Social")
+    - **Parent Node**: Name of the parent (leave blank if it's the root)
+    - **Value**: Size or importance (e.g., 300, 5000)
+
+    👉 Example:
+    - Label: ESG (Parent: *empty*, Value: 1000)
+    - Label: Governance (Parent: ESG, Value: 400)
+    - Label: Food Security (Parent: Governance, Value: 150)
+    """)
+    new_label = st.text_input("Node Label")
+    new_parent = st.text_input("Parent Node (leave empty if root)")
+    new_value = st.number_input("Value", min_value=0.0, step=10.0)
+
+    if st.button("Add Node"):
+        if new_label:  # Check user entered label
+            st.session_state.node_list.append({
+                'labels': new_label,
+                'parents': new_parent,
+                'values': new_value
+            })
+            st.success(f"✅ Added node: {new_label}")
+        else:
+            st.error("❌ Please enter a label.")
+
+    # Show current structure
+    if st.session_state.node_list:
+        st.markdown("### 🌿 Current Sunburst Structure:")
+        df_nodes = pd.DataFrame(st.session_state.node_list)
+        st.dataframe(df_nodes)
+
+        col_reset, col_undo = st.columns(2)
+        # Add undo button
+        with col_undo:
+            if st.button("↩️ Undo Last Step"):
+                if st.session_state.node_list:
+                    removed_node = st.session_state.node_list.pop()  # Remove last node
+                    st.success(f"✅ Removed last node: {removed_node['labels']}")
+                else:
+                    st.warning("⚠️ No nodes to undo.")
+        # Add reset button
+        with col_reset:
+            if st.button("🔄 Reset Structure"):
+                st.session_state.node_list = []
+                st.success("✅ Structure has been reset!")
+        
+        fig = px.sunburst(
+            df_nodes,
+            names='labels',
+            parents='parents',
+            values='values'
+        )
+        fig.update_traces(branchvalues='total')  # Ensure Plotly sunburst chart fills 360 degrees 
+
+        fig.update_layout(title_x=0.5)
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("Start adding nodes to see the chart.")

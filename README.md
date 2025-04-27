@@ -4,6 +4,9 @@ This is a lightweight Streamlit web application that visualises the ESG (Environ
 It is designed as a freelance-style data visualisation demo with quick insights and interactive filtering.
 
 ## 📌 Features
+- Upload ESG Data in CSV or Excel Format
+- Mannual Build your own sunburst structure, then save images
+- Undo/Reset button while building your sunburst
 - 📊 Interactive sunburst chart with ESG hierarchy
 - 🎯 Filter by main categories (Governance, Social, Environment)
 - 📈 Auto-generated insights panel
@@ -24,8 +27,20 @@ pip3 install -r requirements.txt
 python3 -m streamlit run app.py
 ```
 
+## Data Requirements (for Upload)
+Uploaded file must have **3 columns**
+1. labels: *str*
+2. parents *str*
+3. values: *numeric*
+
 🧠 Use Case
 Originally created as a freelance-style task for communicating marketing strategies and sustainability impact. This app makes abstract ESG concepts more digestible with intuitive visuals.
+
+Now it serves as a quick demo for:
+
+- Presenting ESG frameworks interactively
+- Visualising sector performance over multiple years
+- Letting users build and experiment with hierarchical data structures without coding
 
 🧑‍💻 Author
 Bui Tien Long – Data Science @ Monash University
